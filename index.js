@@ -19,9 +19,11 @@ async function run() {
     await client.connect();
     const partsCollection = client.db("equipoCars").collection("parts");
     // Add parts method
-    app.post('/parts', async(req, res)=>{
-        
-    })
+    app.post("/parts", async (req, res) => {
+      const parts = await partsCollection.insertOne(req.body);
+      res.send(parts);
+    });
+    // Get Parts method
   } finally {
   }
 }
