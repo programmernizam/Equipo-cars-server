@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 app.use(cors());
@@ -14,11 +15,26 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+function verifyJwt(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "Unauthorize Access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden Access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
 async function run() {
   try {
     await client.connect();
     const partsCollection = client.db("equipoCars").collection("parts");
     const reviewsCollection = client.db("equipoCars").collection("reviews");
+    const ordersCollection = client.db("equipoCars").collection("orders");
     // Add parts method
     app.post("/parts", async (req, res) => {
       const parts = req.body;
@@ -32,6 +48,16 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    app.get("/parts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const item = await partsCollection.findOne(query);
+      if (item) {
+        res.send(item);
+      } else {
+        res.send("Record Not Found");
+      }
+    });
     // Add Review method
     app.post("/reviews", async (req, res) => {
       const parts = req.body;
@@ -44,6 +70,17 @@ async function run() {
       const cursor = reviewsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
+    });
+    // Get Order Details
+    app.post("/orders", async (req, res) => {
+      const item = req.body;
+      const orders = await ordersCollection.insertOne(item);
+      res.send(orders);
+    });
+    app.get("/orders", async (req, res) => {
+      const query = {};
+      const orders = await ordersCollection.find(query).toArray();
+      res.send(orders);
     });
   } finally {
   }
