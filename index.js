@@ -58,6 +58,19 @@ async function run() {
         res.send("Record Not Found");
       }
     });
+    app.put("/parts/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateItem = req.body;
+      const filter = {_id: ObjectId(id)};
+      const option = {upsert: true};
+      const updateDoc = {
+        $set:{
+          quantity : updateItem.updateQuantity
+        }
+      }
+      const result = await partsCollection.updateOne(filter, updateDoc, option)
+      res.send(result)
+    });
     // Add Review method
     app.post("/reviews", async (req, res) => {
       const parts = req.body;
