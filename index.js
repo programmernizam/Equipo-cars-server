@@ -61,15 +61,15 @@ async function run() {
     app.put("/parts/:id", async (req, res) => {
       const id = req.params.id;
       const updateItem = req.body;
-      const filter = {_id: ObjectId(id)};
-      const option = {upsert: true};
+      const filter = { _id: ObjectId(id) };
+      const option = { upsert: true };
       const updateDoc = {
-        $set:{
-          quantity : updateItem.updateQuantity
-        }
-      }
-      const result = await partsCollection.updateOne(filter, updateDoc, option)
-      res.send(result)
+        $set: {
+          quantity: updateItem.updateQuantity,
+        },
+      };
+      const result = await partsCollection.updateOne(filter, updateDoc, option);
+      res.send(result);
     });
     // Add Review method
     app.post("/reviews", async (req, res) => {
@@ -91,9 +91,17 @@ async function run() {
       res.send(orders);
     });
     app.get("/orders", async (req, res) => {
-      const query = {};
+      const user = req.query.email;
+      const query = { email: user };
       const orders = await ordersCollection.find(query).toArray();
       res.send(orders);
+    });
+    // Delete Items
+    app.delete("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await ordersCollection.deleteOne(query);
+      res.send(result);
     });
   } finally {
   }
