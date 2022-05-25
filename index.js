@@ -103,11 +103,16 @@ async function run() {
       const orders = await ordersCollection.find(query).toArray();
       res.send(orders);
     });
-    app.get("/orders", async (req, res) => {
+    app.get("/orders", verifyJwt, async (req, res) => {
       const user = req.query.email;
-      const query = { email: user };
-      const orders = await ordersCollection.find(query).toArray();
-      res.send(orders);
+      const decodedEmail = req.decoded.email;
+      if (user === decodedEmail) {
+        const query = { email: user };
+        const orders = await ordersCollection.find(query).toArray();
+        return res.send(orders);
+      } else {
+        return res.status(403).send({ message: "forbidden access" });
+      }
     });
     // Delete orders
     app.delete("/orders/:id", async (req, res) => {
