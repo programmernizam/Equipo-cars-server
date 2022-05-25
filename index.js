@@ -35,6 +35,7 @@ async function run() {
     const partsCollection = client.db("equipoCars").collection("parts");
     const reviewsCollection = client.db("equipoCars").collection("reviews");
     const ordersCollection = client.db("equipoCars").collection("orders");
+    const userCollection = client.db("equipoCars").collection("users");
     // Add parts method
     app.post("/parts", async (req, res) => {
       const parts = req.body;
@@ -71,6 +72,13 @@ async function run() {
       const result = await partsCollection.updateOne(filter, updateDoc, option);
       res.send(result);
     });
+    // delete parts
+    app.delete("/parts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await partsCollection.deleteOne(query);
+      res.send(result);
+    });
     // Add Review method
     app.post("/reviews", async (req, res) => {
       const parts = req.body;
@@ -90,18 +98,40 @@ async function run() {
       const orders = await ordersCollection.insertOne(item);
       res.send(orders);
     });
+    app.get("/order", async (req, res) => {
+      const query = {};
+      const orders = await ordersCollection.find(query).toArray();
+      res.send(orders);
+    });
     app.get("/orders", async (req, res) => {
       const user = req.query.email;
       const query = { email: user };
       const orders = await ordersCollection.find(query).toArray();
       res.send(orders);
     });
-    // Delete Items
+    // Delete orders
     app.delete("/orders/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await ordersCollection.deleteOne(query);
       res.send(result);
+    });
+    // Users
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      const token = jwt.sign(
+        { email: email },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "1h" }
+      );
+      res.send({ result, token });
     });
   } finally {
   }
