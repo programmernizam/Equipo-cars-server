@@ -114,6 +114,12 @@ async function run() {
         return res.status(403).send({ message: "forbidden access" });
       }
     });
+    app.get('/orders/:id', verifyJwt, async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)};
+      const orders = await ordersCollection.findOne(query);
+      res.send(order);
+    })
     // Delete orders
     app.delete("/orders/:id", async (req, res) => {
       const id = req.params.id;
@@ -161,7 +167,7 @@ async function run() {
       const token = jwt.sign(
         { email: email },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "12h" }
       );
       res.send({ result, token });
     });
